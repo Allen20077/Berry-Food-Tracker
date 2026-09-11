@@ -2,187 +2,187 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    DATABASE
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ===================================================== */
 
-            const STORAGE_KEY =
-                "berry_food_tracker_user";
+const STORAGE_KEY =
+    "berry_food_tracker_user";
 
 
-            let appData =
-                JSON.parse(
-                    localStorage.getItem(
-                        STORAGE_KEY
-                    )
-                ) || {
+let appData =
+    JSON.parse(
+        localStorage.getItem(
+            STORAGE_KEY
+        )
+    ) || {
 
-                    onboardingComplete: false,
+        onboardingComplete: false,
 
-                    profile: {
-                        name: "",
-                        age: "",
-                        gender: "",
-                        height: "",
-                        weight: "",
-                        activity: "",
-                        goal: "",
-                        diet: "",
-                        allergies: ""
-                    },
+        profile: {
+            name: "",
+            age: "",
+            gender: "",
+            height: "",
+            weight: "",
+            activity: "",
+            goal: "",
+            diet: "",
+            allergies: ""
+        },
 
-                    goals: {
-                        calories: 2100,
-                        protein: 140,
-                        carbs: 210,
-                        fat: 65,
-                        fiber: 30,
-                        water: 2500
-                    },
+        goals: {
+            calories: 2100,
+            protein: 140,
+            carbs: 210,
+            fat: 65,
+            fiber: 30,
+            water: 2500
+        },
 
-                    meals: [],
+        meals: [],
 
-                    water: 0
-                };
-
-
-            /* =====================================================
-               ONBOARDING QUESTIONS
-            ===================================================== */
-
-            const questions = [
-
-                {
-                    title: "What should we call you?",
-                    subtitle: "Your name helps Berry personalize your experience.",
-                    key: "name",
-                    type: "text",
-                    placeholder: "Enter your name"
-                },
-
-                {
-                    title: "How old are you?",
-                    subtitle: "This helps estimate your daily nutrition needs.",
-                    key: "age",
-                    type: "number",
-                    placeholder: "Age"
-                },
-
-                {
-                    title: "What is your gender?",
-                    subtitle: "Used only for nutrition calculations.",
-                    key: "gender",
-                    type: "select",
-                    options: [
-                        "Male",
-                        "Female",
-                        "Prefer not to say"
-                    ]
-                },
-
-                {
-                    title: "What is your height?",
-                    subtitle: "Enter your height in centimeters.",
-                    key: "height",
-                    type: "number",
-                    placeholder: "Height in cm"
-                },
-
-                {
-                    title: "What is your current weight?",
-                    subtitle: "Enter your weight in kilograms.",
-                    key: "weight",
-                    type: "number",
-                    placeholder: "Weight in kg"
-                },
-
-                {
-                    title: "How active are you?",
-                    subtitle: "Choose the option that best matches your normal day.",
-                    key: "activity",
-                    type: "select",
-                    options: [
-                        "Sedentary",
-                        "Lightly active",
-                        "Moderately active",
-                        "Very active",
-                        "Athlete"
-                    ]
-                },
-
-                {
-                    title: "What is your main goal?",
-                    subtitle: "Berry will use this to create your nutrition targets.",
-                    key: "goal",
-                    type: "select",
-                    options: [
-                        "Lose weight",
-                        "Maintain weight",
-                        "Build muscle",
-                        "Gain weight",
-                        "Improve overall nutrition"
-                    ]
-                },
-
-                {
-                    title: "What type of diet do you follow?",
-                    subtitle: "You can change this later.",
-                    key: "diet",
-                    type: "select",
-                    options: [
-                        "No specific diet",
-                        "Vegetarian",
-                        "Vegan",
-                        "High protein",
-                        "Low carb",
-                        "Keto"
-                    ]
-                }
-
-            ];
+        water: 0
+    };
 
 
-            let currentQuestion = 0;
+/* =====================================================
+   ONBOARDING QUESTIONS
+===================================================== */
+
+const questions = [
+
+    {
+        title: "What should we call you?",
+        subtitle: "Your name helps Berry personalize your experience.",
+        key: "name",
+        type: "text",
+        placeholder: "Enter your name"
+    },
+
+    {
+        title: "How old are you?",
+        subtitle: "This helps estimate your daily nutrition needs.",
+        key: "age",
+        type: "number",
+        placeholder: "Age"
+    },
+
+    {
+        title: "What is your gender?",
+        subtitle: "Used only for nutrition calculations.",
+        key: "gender",
+        type: "select",
+        options: [
+            "Male",
+            "Female",
+            "Prefer not to say"
+        ]
+    },
+
+    {
+        title: "What is your height?",
+        subtitle: "Enter your height in centimeters.",
+        key: "height",
+        type: "number",
+        placeholder: "Height in cm"
+    },
+
+    {
+        title: "What is your current weight?",
+        subtitle: "Enter your weight in kilograms.",
+        key: "weight",
+        type: "number",
+        placeholder: "Weight in kg"
+    },
+
+    {
+        title: "How active are you?",
+        subtitle: "Choose the option that best matches your normal day.",
+        key: "activity",
+        type: "select",
+        options: [
+            "Sedentary",
+            "Lightly active",
+            "Moderately active",
+            "Very active",
+            "Athlete"
+        ]
+    },
+
+    {
+        title: "What is your main goal?",
+        subtitle: "Berry will use this to create your nutrition targets.",
+        key: "goal",
+        type: "select",
+        options: [
+            "Lose weight",
+            "Maintain weight",
+            "Build muscle",
+            "Gain weight",
+            "Improve overall nutrition"
+        ]
+    },
+
+    {
+        title: "What type of diet do you follow?",
+        subtitle: "You can change this later.",
+        key: "diet",
+        type: "select",
+        options: [
+            "No specific diet",
+            "Vegetarian",
+            "Vegan",
+            "High protein",
+            "Low carb",
+            "Keto"
+        ]
+    }
+
+];
+
+
+let currentQuestion = 0;
 
 /* Real Berry AI backend. Keep the Groq key on the backend only. */
 const BERRY_API_URL =
     window.BERRY_API_URL ||
-    "http://127.0.0.1:8000";
+    "https://berry-food-tracker.vercel.app";
 
 let selectedFoodFile = null;
 let latestAIResult = null;
 
 
-            /* =====================================================
-               ONBOARDING
-            ===================================================== */
+/* =====================================================
+   ONBOARDING
+===================================================== */
 
-            function renderQuestion() {
+function renderQuestion() {
 
-                const q =
-                    questions[currentQuestion];
-
-
-                document.getElementById(
-                        "questionNumber"
-                    ).textContent =
-                    `${currentQuestion + 1} / ${questions.length}`;
+    const q =
+        questions[currentQuestion];
 
 
-                document.getElementById(
-                        "onboardingProgress"
-                    ).style.width =
-                    (
-                        (
-                            currentQuestion + 1
-                        ) /
-                        questions.length *
-                        100
-                    ) + "%";
+    document.getElementById(
+            "questionNumber"
+        ).textContent =
+        `${currentQuestion + 1} / ${questions.length}`;
 
 
-                let input = "";
+    document.getElementById(
+            "onboardingProgress"
+        ).style.width =
+        (
+            (
+                currentQuestion + 1
+            ) /
+            questions.length *
+            100
+        ) + "%";
 
 
-                if (q.type === "text") {
+    let input = "";
 
-                    input = `
+
+    if (q.type === "text") {
+
+        input = `
 
             <input
                 id="questionInput"
@@ -205,12 +205,12 @@ let latestAIResult = null;
 
         `;
 
-                }
+    }
 
 
-                if (q.type === "number") {
+    if (q.type === "number") {
 
-                    input = `
+        input = `
 
             <input
                 id="questionInput"
@@ -233,12 +233,12 @@ let latestAIResult = null;
 
         `;
 
-                }
+    }
 
 
-                if (q.type === "select") {
+    if (q.type === "select") {
 
-                    input = `
+        input = `
 
             <div
                 class="mt-8 space-y-3"

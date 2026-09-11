@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+groq
+python-multipart
+python-dotenv
+SQLAlchemy>=2.0
+psycopg[binary]>=3.2
+PyJWT>=2.9
+Werkzeug>=3.0
