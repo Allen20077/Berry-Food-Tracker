@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <meta name="theme-color" content="#f8faf8">
+
+    <title>Berry Food Tracker</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            margin: 0;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background: #e9ecef;
+        }
+        
+        button,
+        input,
+        select {
+            font-family: inherit;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .hide-scrollbar {
+            scrollbar-width: none;
+        }
+        
+        .screen {
+            animation: fade .25s ease;
+        }
+        
+        @keyframes fade {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal {
+            animation: fade .2s ease;
+        }
+        
+        .progress {
+            transition: width .4s ease;
+        }
+        
+        .chart-bar {
+            transition: height .4s ease;
+        }
+        
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #52796f;
+            box-shadow: 0 0 0 3px rgba(82, 121, 111, .1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app" class="w-full max-w-[390px] h-screen sm:h-[844px]
+           mx-auto bg-[#f8faf8]
+           sm:rounded-[44px]
+           shadow-2xl overflow-hidden
+           relative">
+
+
+        <!-- =====================================================
+     ONBOARDING
+===================================================== -->
+
+        <div id="onboarding" class="screen h-full flex flex-col">
+
+            <div class="px-6 pt-10">
+
+                <div class="flex justify-between items-center">
+
+                    <div>
+
+                        <div class="text-[11px] font-extrabold
+                            uppercase tracking-[2px]
+                            text-violet-500">
+                            BERRY AI
+                        </div>
+
+                        <h1 class="text-2xl font-extrabold
+                           text-slate-800 mt-1">
+                            Let's build your plan 🍓
+                        </h1>
+
+                    </div>
+
+                    <span id="questionNumber" class="text-xs font-bold text-slate-400">
+                1 / 8
+            </span>
+
+                </div>
+
+
+                <div class="h-1.5 bg-slate-200 rounded-full mt-6 overflow-hidden">
+
+                    <div id="onboardingProgress" class="h-full bg-violet-500 rounded-full" style="width:12.5%"></div>
+
+                </div>
+
+            </div>
+
+
+            <div id="questionContainer" class="flex-1 overflow-y-auto hide-scrollbar
+               px-6 pt-12"></div>
+
+
+            <div class="px-6 pb-8 pt-4 bg-[#f8faf8]">
+
+                <button id="nextButton" onclick="nextQuestion()" class="w-full py-4 rounded-2xl
+                   bg-slate-900 text-white
+                   font-extrabold shadow-lg
+                   active:scale-[.98]">
+            Continue
+        </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+     MAIN APP
+===================================================== -->
+
+        <div id="mainApp" class="hidden h-full flex flex-col">
+
+            <!-- HEADER -->
+
+            <header class="pt-8 px-6 pb-3
+               flex items-center justify-between">
+
+                <div>
+
+                    <span id="appDate" class="text-[10px]
+                       font-extrabold
+                       uppercase tracking-widest
+                       text-slate-400"></span>
+
+                    <h1 id="welcomeName" class="text-xl font-extrabold
+                       text-slate-800 mt-1">
+                        Today's Fuel
+                    </h1>
+
+                </div>
+
+
+                <div class="flex gap-2">
+
+                    <button onclick="openAICoach()" class="w-10 h-10 rounded-full
+                       bg-white border
+                       border-slate-100
+                       shadow-sm
+                       flex items-center justify-center">
+
+                <i
+                    data-lucide="sparkles"
+                    class="w-4 h-4 text-violet-500"
+                ></i>
+
+            </button>
+
+
+                    <button onclick="openProfile()" class="w-10 h-10 rounded-full
+                       bg-white border
+                       border-slate-100
+                       shadow-sm
+                       flex items-center justify-center">
+
+                <i
+                    data-lucide="user-round"
+                    class="w-4 h-4 text-slate-600"
+                ></i>
+
+            </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- CONTENT -->
+
+            <main class="flex-1 overflow-y-auto
+               hide-scrollbar
+               px-5 pb-6 space-y-5">
+
+
+                <!-- CALORIES -->
+
+                <section class="bg-white rounded-[32px]
+                   p-6 shadow-sm
+                   border border-slate-100">
+
+                    <div class="flex justify-between items-center">
+
+                        <div>
+
+                            <span class="text-xs font-semibold
+                               text-slate-400">
+                        Calories Remaining
+                    </span>
+
+                            <div id="caloriesRemaining" class="text-4xl
+                               font-extrabold
+                               text-slate-900 mt-1">
+                                2100
+                            </div>
+
+                            <div class="mt-2 inline-flex
+                               items-center gap-1
+                               px-2.5 py-1
+                               rounded-full
+                               bg-emerald-50
+                               text-emerald-600
+                               text-[10px]
+                               font-bold">
+
+                                <i data-lucide="trending-down" class="w-3 h-3"></i>
+
+                                <span id="calorieSummary">
+                            0 eaten
+                        </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- RING -->
+
+                        <div class="relative w-24 h-24">
+
+                            <svg viewBox="0 0 36 36" class="w-full h-full
+                               transform -rotate-90">
+
+                        <path
+                            stroke="#edf0ed"
+                            stroke-width="3.5"
+                            fill="none"
+                            d="
+                            M18 2.0845
+                            a15.9155 15.9155 0 0 1
+                            0 31.831
+                            a15.9155 15.9155 0 0 1
+                            0-31.831"
+                        />
+
+                        <path
+                            id="calorieRing"
+                            stroke="#52796f"
+                            stroke-width="3.5"
+                            stroke-linecap="round"
+                            fill="none"
+                            stroke-dasharray="0,100"
+                            d="
+                            M18 2.0845
+                            a15.9155 15.9155 0 0 1
+                            0 31.831
+                            a15.9155 15.9155 0 0 1
+                            0-31.831"
+                        />
+
+                    </svg>
+
+                            <div class="absolute inset-0
+                               flex items-center
+                               justify-center">
+
+                                <i data-lucide="flame" class="w-5 h-5
+                                   text-emerald-500"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MACROS -->
+
+                    <div class="grid grid-cols-3
+                       gap-2.5 mt-6
+                       pt-5 border-t
+                       border-slate-100">
+
+                        <div class="bg-slate-50
+                           rounded-2xl p-3">
+
+                            <div class="flex justify-between
+                               text-[10px]
+                               font-bold
+                               text-slate-600">
+
+                                <span>Protein</span>
+
+                                <span id="proteinPercent">
+                            0%
+                        </span>
+
+                            </div>
+
+                            <div class="h-1.5 bg-slate-200
+                               rounded-full mt-2
+                               overflow-hidden">
+
+                                <div id="proteinBar" class="progress h-full
+                                   bg-[#ff7b72]" style="width:0%"></div>
+
+                            </div>
+
+                            <span id="proteinValue" class="text-[9px]
+                               text-slate-400
+                               mt-1 block">
+                        0 / 140g
+                    </span>
+
+                        </div>
+
+
+                        <div class="bg-slate-50
+                           rounded-2xl p-3">
+
+                            <div class="flex justify-between
+                               text-[10px]
+                               font-bold
+                               text-slate-600">
+
+                                <span>Carbs</span>
+
+                                <span id="carbsPercent">
+                            0%
+                        </span>
+
+                            </div>
+
+                            <div class="h-1.5 bg-slate-200
+                               rounded-full mt-2
+                               overflow-hidden">
+
+                                <div id="carbsBar" class="progress h-full
+                                   bg-[#e9c46a]" style="width:0%"></div>
+
+                            </div>
+
+                            <span id="carbsValue" class="text-[9px]
+                               text-slate-400
+                               mt-1 block">
+                        0 / 210g
+                    </span>
+
+                        </div>
+
+
+                        <div class="bg-slate-50
+                           rounded-2xl p-3">
+
+                            <div class="flex justify-between
+                               text-[10px]
+                               font-bold
+                               text-slate-600">
+
+                                <span>Fat</span>
+
+                                <span id="fatPercent">
+                            0%
+                        </span>
+
+                            </div>
+
+                            <div class="h-1.5 bg-slate-200
+                               rounded-full mt-2
+                               overflow-hidden">
+
+                                <div id="fatBar" class="progress h-full
+                                   bg-[#2a9d8f]" style="width:0%"></div>
+
+                            </div>
+
+                            <span id="fatValue" class="text-[9px]
+                               text-slate-400
+                               mt-1 block">
+                        0 / 65g
+                    </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- MEALS -->
+
+                <section>
+
+                    <div class="flex items-center
+                       justify-between px-1 mb-3">
+
+                        <h2 class="text-sm font-extrabold
+                           text-slate-800">
+                            Today's Meals
+                        </h2>
+
+                        <button onclick="openDiary()" class="text-xs
+                           font-bold
+                           text-emerald-600">
+                    View History
+                </button>
+
+                    </div>
+
+
+                    <div id="mealList"></div>
+
+                </section>
+
+
+                <!-- WATER -->
+
+                <section class="bg-blue-50/70
+                  border border-blue-100
+                  rounded-2xl p-4">
+
+                    <div class="flex justify-between
+                      items-center">
+
+                        <div>
+
+                            <div class="flex items-center
+                              gap-2 text-blue-600">
+
+                                <i data-lucide="droplet" class="w-4 h-4"></i>
+
+                                <span class="text-xs font-bold">
+                            Water
+                        </span>
+
+                            </div>
+
+                            <div class="mt-2">
+
+                                <b id="waterAmount" class="text-xl
+                                  text-slate-800">
+                            0.0
+                        </b>
+
+                                <span class="text-xs
+                                  text-slate-400">
+                            / 2.5 L
+                        </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <button onclick="addWater(250)" class="px-4 py-2
+                          rounded-xl
+                          bg-blue-500
+                          text-white
+                          text-xs
+                          font-bold">
+                    +250 ml
+                </button>
+
+                    </div>
+
+
+                    <div class="h-2 bg-blue-100
+                      rounded-full mt-4
+                      overflow-hidden">
+
+                        <div id="waterBar" class="progress h-full
+                          bg-blue-400" style="width:0%"></div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- AI -->
+
+                <button onclick="openAICoach()" class="w-full text-left
+                  bg-gradient-to-br
+                  from-violet-50
+                  to-white
+                  border border-violet-100
+                  rounded-2xl p-4">
+
+            <div
+                class="flex items-center gap-2
+                      text-violet-600"
+            >
+
+                <i
+                    data-lucide="bot"
+                    class="w-4 h-4"
+                ></i>
+
+                <span
+                    class="text-[10px]
+                          font-extrabold
+                          tracking-wide"
+                >
+                    BERRY AI COACH
+                </span>
+
+            </div>
+
+            <p
+                id="coachMessage"
+                class="text-xs
+                      text-slate-500
+                      mt-2 leading-5"
+            >
+                Your AI nutrition coach
+                will analyze your progress.
+            </p>
+
+        </button>
+
+
+            </main>
+
+
+            <!-- NAVIGATION -->
+
+            <nav class="bg-white/95
+              backdrop-blur
+              border-t border-slate-100
+              px-6 py-3
+              flex justify-between
+              items-center">
+
+                <button onclick="goHome()" class="flex flex-col
+                  items-center text-slate-900">
+
+            <i
+                data-lucide="home"
+                class="w-5 h-5"
+            ></i>
+
+            <span
+                class="text-[9px]
+                      font-bold mt-1"
+            >
+                Today
+            </span>
+
+        </button>
+
+
+                <button onclick="openDiary()" class="flex flex-col
+                  items-center text-slate-400">
+
+            <i
+                data-lucide="calendar-days"
+                class="w-5 h-5"
+            ></i>
+
+            <span
+                class="text-[9px]
+                      font-medium mt-1"
+            >
+                Diary
+            </span>
+
+        </button>
+
+
+                <button onclick="scanFood()" class="-mt-8
+                  w-14 h-14
+                  rounded-2xl
+                  bg-slate-900
+                  text-white
+                  shadow-xl
+                  flex items-center
+                  justify-center">
+
+            <i
+                data-lucide="plus"
+                class="w-6 h-6"
+            ></i>
+
+        </button>
+
+
+                <button onclick="openTrends()" class="flex flex-col
+                  items-center text-slate-400">
+
+            <i
+                data-lucide="chart-no-axes-combined"
+                class="w-5 h-5"
+            ></i>
+
+            <span
+                class="text-[9px]
+                      font-medium mt-1"
+            >
+                Trends
+            </span>
+
+        </button>
+
+
+                <button onclick="openProfile()" class="flex flex-col
+                  items-center text-slate-400">
+
+            <i
+                data-lucide="settings"
+                class="w-5 h-5"
+            ></i>
+
+            <span
+                class="text-[9px]
+                      font-medium mt-1"
+            >
+                Profile
+            </span>
+
+        </button>
+
+            </nav>
+
+        </div>
+
+
+        <!-- =====================================================
+     MODAL
+===================================================== -->
+
+        <div id="modal" class="hidden absolute inset-0
+           z-50 bg-slate-900/40
+           backdrop-blur-sm
+           flex items-end">
+
+            <div class="w-full bg-white
+               rounded-t-[30px]
+               p-5 max-h-[88%]
+               overflow-y-auto">
+
+                <div class="flex justify-between
+                   items-center mb-5">
+
+                    <h2 id="modalTitle" class="text-lg
+                       font-extrabold
+                       text-slate-800"></h2>
+
+                    <button onclick="closeModal()" class="w-9 h-9
+                       rounded-full
+                       bg-slate-100
+                       text-slate-500">
+                ✕
+            </button>
+
+                </div>
+
+                <div id="modalBody"></div>
+
+            </div>
+
+        </div>
+
+
+<script src="app.js"></script>
+
+
+</body>
+
+</html>
