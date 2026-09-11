@@ -5,8 +5,12 @@ from typing import Any
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from groq import Groq
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
 from dotenv import load_dotenv
+from groq import Groq
 
 load_dotenv()
 
@@ -19,6 +23,14 @@ if not GROQ_API_KEY:
 
 client = Groq(api_key=GROQ_API_KEY)
 app = FastAPI(title="Berry Food Tracker API", version="1.0.0")
+BASE_DIR = Path(__file__).resolve().parent.parent
+WWW_DIR = BASE_DIR / "www"
+
+@app.get("/", include_in_schema=False)
+def frontend():
+    return FileResponse(WWW_DIR / "index.html")
+
+app.mount("/", StaticFiles(directory=WWW_DIR, html=True), name="frontend")
 
 app.add_middleware(
     CORSMiddleware,
