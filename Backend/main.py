@@ -206,3 +206,13 @@ async def analyze_food(image: UploadFile = File(...)) -> dict[str, Any]:
 
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Groq analysis failed: {exc}") from exc
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+WWW_DIR = Path(__file__).resolve().parent.parent / "www"
+
+app.mount(
+    "/",
+    StaticFiles(directory=WWW_DIR, html=True),
+    name="frontend"
+)
