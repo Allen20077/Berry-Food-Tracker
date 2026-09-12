@@ -1186,51 +1186,163 @@ function addWater(
 /* =====================================================
    CAMERA / GALLERY
 ===================================================== */
-
 function scanFood(){
 
-    const choice =
-        confirm(
-            "Press OK to take a photo with the camera.\n\nPress Cancel to choose a photo from your gallery."
-        );
+    openModal(
+        "📸 Scan Food",
+        `
+            <div class="space-y-3">
 
-    const input =
-        document.createElement(
-            "input"
-        );
+                <!-- CAMERA -->
+                <button
+                    onclick="selectFoodSource('camera')"
+                    class="
+                        w-full
+                        flex
+                        items-center
+                        gap-4
+                        p-4
+                        rounded-2xl
+                        bg-violet-50
+                        border
+                        border-violet-100
+                        text-left
+                        active:scale-[0.98]
+                        transition
+                    "
+                >
+                    <div
+                        class="
+                            w-12
+                            h-12
+                            rounded-xl
+                            bg-violet-600
+                            text-white
+                            flex
+                            items-center
+                            justify-center
+                            text-xl
+                        "
+                    >
+                        📷
+                    </div>
 
-    input.type =
-        "file";
+                    <div>
+                        <div class="font-semibold text-slate-800">
+                            Camera
+                        </div>
 
-    input.accept =
-        "image/*";
+                        <div class="text-xs text-slate-400 mt-1">
+                            Take a new photo of your food
+                        </div>
+                    </div>
+                </button>
 
-    if(choice){
 
-        input.capture =
-            "environment";
+                <!-- PICTURE / GALLERY -->
+                <button
+                    onclick="selectFoodSource('gallery')"
+                    class="
+                        w-full
+                        flex
+                        items-center
+                        gap-4
+                        p-4
+                        rounded-2xl
+                        bg-slate-50
+                        border
+                        border-slate-200
+                        text-left
+                        active:scale-[0.98]
+                        transition
+                    "
+                >
+                    <div
+                        class="
+                            w-12
+                            h-12
+                            rounded-xl
+                            bg-slate-200
+                            flex
+                            items-center
+                            justify-center
+                            text-xl
+                        "
+                    >
+                        🖼️
+                    </div>
 
-    }
+                    <div>
+                        <div class="font-semibold text-slate-800">
+                            Picture / Gallery
+                        </div>
 
-    input.onchange =
-        function(){
+                        <div class="text-xs text-slate-400 mt-1">
+                            Choose a photo from your device
+                        </div>
+                    </div>
+                </button>
 
-            if(
-                input.files &&
-                input.files[0]
-            ){
 
-                openFoodAnalyzer(
-                    input.files[0]
-                );
+                <!-- CANCEL -->
+                <button
+                    onclick="closeModal()"
+                    class="
+                        w-full
+                        py-3
+                        rounded-2xl
+                        text-sm
+                        font-semibold
+                        text-slate-500
+                        bg-slate-100
+                        active:scale-[0.98]
+                        transition
+                    "
+                >
+                    Cancel
+                </button>
 
-            }
+            </div>
+        `
+    );
 
-        };
-
-    input.click();
 }
 
+function selectFoodSource(source){
+
+    const input =
+        document.createElement("input");
+
+    input.type = "file";
+    input.accept = "image/*";
+
+    if(source === "camera"){
+        input.capture = "environment";
+    }
+
+    input.onchange = function(){
+
+        if(
+            input.files &&
+            input.files[0]
+        ){
+
+            const file =
+                input.files[0];
+
+            closeModal();
+
+            openFoodAnalyzer(file);
+
+        }
+
+    };
+
+    closeModal();
+
+    input.click();
+
+}
 /* =====================================================
    FOOD ANALYZER
 ===================================================== */
@@ -3537,4 +3649,5 @@ if(
 
 }
 
+lucide.createIcons();
 lucide.createIcons();
