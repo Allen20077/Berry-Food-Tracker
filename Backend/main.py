@@ -14,6 +14,7 @@ from groq import Groq
 from datetime import datetime
 from supabase import create_client, Client
 load_dotenv()
+from supabase import create_client, Client
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL = os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.8-27b")
@@ -221,15 +222,16 @@ async def analyze_food(
                     ],
                 },
             ],
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "berry_food_analysis",
-                    "strict": True,
-                    "schema": FOOD_SCHEMA,
-                },
-            },
-            temperature=0.2,
+         response_format={
+    "type": "json_schema",
+    "json_schema": {
+        "name": "berry_food_analysis",
+        "strict": True,
+        "schema": FOOD_SCHEMA,
+    },
+},
+max_completion_tokens=900,
+temperature=0.2,
         )
 
         content = completion.choices[0].message.content or "{}"
