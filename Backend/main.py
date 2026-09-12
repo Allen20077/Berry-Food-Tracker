@@ -13,8 +13,8 @@ from dotenv import load_dotenv
 from groq import Groq
 from datetime import datetime
 from supabase import create_client, Client
+
 load_dotenv()
-from supabase import create_client, Client
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL = os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.8-27b")
@@ -57,10 +57,6 @@ client = Groq(api_key=GROQ_API_KEY)
 app = FastAPI(title="Berry Food Tracker API", version="1.0.0")
 BASE_DIR = Path(__file__).resolve().parent.parent
 WWW_DIR = BASE_DIR / "www"
-
-@app.get("/", include_in_schema=False)
-def frontend():
-    return FileResponse(WWW_DIR / "index.html")
 
 app.add_middleware(
     CORSMiddleware,
