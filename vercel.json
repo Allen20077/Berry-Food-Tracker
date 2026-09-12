@@ -4,16 +4,8 @@
             "destination": "/api/$1"
         },
         {
-            "source": "/app.js",
-            "destination": "/www/app.js"
-        },
-        {
-            "source": "/style.css",
-            "destination": "/www/style.css"
-        },
-        {
-            "source": "/",
-            "destination": "/www/index.html"
+            "source": "/(.*)",
+            "destination": "/www/$1"
         }
     ]
 }
