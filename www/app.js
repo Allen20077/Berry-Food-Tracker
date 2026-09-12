@@ -38,8 +38,20 @@ let appData =
 
         meals: [],
 
-        water: 0
+        water: 0,
+        waterDate: ""
     };
+const currentWaterDate = today();
+
+if (appData.waterDate !== currentWaterDate) {
+    appData.water = 0;
+    appData.waterDate = currentWaterDate;
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(appData)
+    );
+}
 
 
 /* =====================================================
@@ -1154,16 +1166,22 @@ function addWater(
     amount
 ){
 
+    const currentDate = today();
+
+    if (appData.waterDate !== currentDate) {
+        appData.water = 0;
+        appData.waterDate = currentDate;
+    }
+
     appData.water +=
         Number(amount);
 
+    appData.waterDate = currentDate;
 
     save();
 
     render();
-
 }
-
 
 /* =====================================================
    CAMERA / GALLERY
@@ -1171,23 +1189,28 @@ function addWater(
 
 function scanFood(){
 
+    const choice =
+        confirm(
+            "Press OK to take a photo with the camera.\n\nPress Cancel to choose a photo from your gallery."
+        );
+
     const input =
         document.createElement(
             "input"
         );
 
-
     input.type =
         "file";
-
 
     input.accept =
         "image/*";
 
+    if(choice){
 
-    input.capture =
-        "environment";
+        input.capture =
+            "environment";
 
+    }
 
     input.onchange =
         function(){
@@ -1205,11 +1228,8 @@ function scanFood(){
 
         };
 
-
     input.click();
-
 }
-
 
 /* =====================================================
    FOOD ANALYZER
@@ -1477,6 +1497,10 @@ async function analyzeFoodWithAI(
             selectedFoodFile,
             selectedFoodFile.name
         );
+        formData.append(
+    "meal_type",
+    type
+);
 
         const response =
             await fetch(
@@ -3392,13 +3416,16 @@ function formatDate(
 
 
 function today(){
+    const date = new Date();
 
-    return new Date()
-        .toISOString()
-        .split("T")[0];
-
-}
-
+    return (
+        date.getFullYear() +
+        "-" +
+        String(date.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(date.getDate()).padStart(2, "0")
+    );
+}  
 
 /* =====================================================
   SECURITY

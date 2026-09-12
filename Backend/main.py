@@ -3,7 +3,7 @@ import json
 import os
 from typing import Any
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,12 +11,43 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from groq import Groq
-
+from datetime import datetime
+from supabase import create_client, Client
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL = os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.8-27b")
 MAX_IMAGE_BYTES = 20 * 1024 * 1024
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
+SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "berry-food-images")
+
+supabase: Client | None = None
+
+
+def get_supabase() -> Client:
+    global supabase
+
+    if supabase is None:
+        if not SUPABASE_URL:
+            raise HTTPException(
+                status_code=500,
+                detail="SUPABASE_URL is missing."
+            )
+
+        if not SUPABASE_SECRET_KEY:
+            raise HTTPException(
+                status_code=500,
+                detail="SUPABASE_SECRET_KEY is missing."
+            )
+
+        supabase = create_client(
+            SUPABASE_URL,
+            SUPABASE_SECRET_KEY
+        )
+
+    return supabase
 
 if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY is missing. Add it to backend/.env")
@@ -29,8 +60,6 @@ WWW_DIR = BASE_DIR / "www"
 @app.get("/", include_in_schema=False)
 def frontend():
     return FileResponse(WWW_DIR / "index.html")
-
-app.mount("/", StaticFiles(directory=WWW_DIR, html=True), name="frontend")
 
 app.add_middleware(
     CORSMiddleware,
@@ -163,7 +192,10 @@ def health() -> dict[str, Any]:
 
 
 @app.post("/api/analyze-food")
-async def analyze_food(image: UploadFile = File(...)) -> dict[str, Any]:
+async def analyze_food(
+    image: UploadFile = File(...),
+    meal_type: str = Form("Meal")
+) -> dict[str, Any]:
     if not image.content_type or not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Please upload an image file.")
 
@@ -202,17 +234,91 @@ async def analyze_food(image: UploadFile = File(...)) -> dict[str, Any]:
 
         content = completion.choices[0].message.content or "{}"
         result = json.loads(content)
-        return {"success": True, "analysis": result}
+        now = datetime.now()
 
+        date_folder = now.strftime("%Y-%m-%d")
+
+        safe_meal_type = "".join(
+            c if c.isalnum() or c in "-_" else "_"
+            for c in meal_type.strip()
+        )
+
+        if not safe_meal_type:
+            safe_meal_type = "Meal"
+
+        timestamp = now.strftime("%H-%M-%S-%f")
+
+        extension_map = {
+            "image/jpeg": "jpg",
+            "image/jpg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/heic": "heic",
+            "image/heif": "heif",
+        }
+
+        extension = extension_map.get(
+            image.content_type.lower(),
+            "jpg"
+        )
+
+        image_path = (
+            f"{date_folder}/"
+            f"{safe_meal_type}/"
+            f"{timestamp}.{extension}"
+        )
+
+        analysis_path = (
+            f"{date_folder}/"
+            f"{safe_meal_type}/"
+            f"{timestamp}.json"
+        )
+
+        storage = get_supabase()
+
+        storage.storage.from_(SUPABASE_BUCKET).upload(
+            image_path,
+            raw,
+            file_options={
+                "content-type": image.content_type,
+                "cache-control": "31536000",
+                "upsert": False,
+            },
+        )
+
+        record = {
+            "date": date_folder,
+            "meal_type": meal_type,
+            "created_at": now.isoformat(),
+            "image_file": image_path,
+            "analysis": result,
+        }
+
+        storage.storage.from_(SUPABASE_BUCKET).upload(
+            analysis_path,
+            json.dumps(
+                record,
+                ensure_ascii=False,
+                indent=2
+            ).encode("utf-8"),
+            file_options={
+                "content-type": "application/json",
+                "cache-control": "31536000",
+                "upsert": False,
+            },
+        )
+
+        return {
+            "success": True,
+            "analysis": result,
+            "storage": {
+                "bucket": SUPABASE_BUCKET,
+                "date": date_folder,
+                "meal_type": meal_type,
+                "image_file": image_path,
+                "analysis_file": analysis_path,
+            },
+        }
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Groq analysis failed: {exc}") from exc
-from pathlib import Path
-from fastapi.staticfiles import StaticFiles
 
-WWW_DIR = Path(__file__).resolve().parent.parent / "www"
-
-app.mount(
-    "/",
-    StaticFiles(directory=WWW_DIR, html=True),
-    name="frontend"
-)
