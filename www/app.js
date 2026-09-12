@@ -3650,4 +3650,41 @@ if(
 }
 
 lucide.createIcons();
-lucide.createIcons();
+lucide.createIcons();document.addEventListener("keydown", function(event) {
+
+    if (event.key === "Enter") {
+
+        const activeElement = document.activeElement;
+
+        // Don't trigger while typing in a textarea
+        if (
+            activeElement &&
+            activeElement.tagName === "TEXTAREA"
+        ) {
+            return;
+        }
+
+        // Don't trigger while typing in a select
+        if (
+            activeElement &&
+            activeElement.tagName === "SELECT"
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const nextButton =
+            document.getElementById("nextButton");
+
+        if (
+            nextButton &&
+            !nextButton.disabled &&
+            !nextButton.classList.contains("hidden")
+        ) {
+            nextButton.click();
+        }
+
+    }
+
+});
