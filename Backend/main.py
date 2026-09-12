@@ -324,3 +324,15 @@ temperature=0.2,
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Groq analysis failed: {exc}") from exc
 
+# =====================================================
+# SERVE FRONTEND
+# =====================================================
+
+app.mount(
+    "/",
+    StaticFiles(
+        directory=WWW_DIR,
+        html=True
+    ),
+    name="frontend"
+)
