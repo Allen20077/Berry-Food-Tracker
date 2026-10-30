@@ -429,6 +429,67 @@ const BERRY_API_URL =
         
 console.log("Berry API URL:", BERRY_API_URL);
 
+async function compressFoodImage(file) {
+    const MAX_SIZE = 3 * 1024 * 1024; // 3 MB
+
+    if (file.size <= MAX_SIZE) {
+        return file;
+    }
+
+    const bitmap = await createImageBitmap(file);
+
+    const settings = [
+        [1600, 0.82],
+        [1400, 0.72],
+        [1200, 0.65],
+        [1000, 0.58]
+    ];
+
+    for (const [maxSide, quality] of settings) {
+        const scale = Math.min(
+            1,
+            maxSide / Math.max(bitmap.width, bitmap.height)
+        );
+
+        const canvas = document.createElement("canvas");
+
+        canvas.width = Math.round(bitmap.width * scale);
+        canvas.height = Math.round(bitmap.height * scale);
+
+        const context = canvas.getContext("2d");
+
+        context.drawImage(
+            bitmap,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        const blob = await new Promise(resolve => {
+            canvas.toBlob(resolve, "image/jpeg", quality);
+        });
+
+        if (blob && blob.size <= MAX_SIZE) {
+            bitmap.close();
+
+            const filename =
+                file.name.replace(/\.[^.]+$/, "") + ".jpg";
+
+            return new File([blob], filename, {
+                type: "image/jpeg",
+                lastModified: Date.now()
+            });
+        }
+    }
+
+    bitmap.close();
+
+    throw new Error(
+        "Image is too large. Please choose a smaller photo."
+    );
+}
+
 let selectedFoodFile = null;
 let latestAIResult = null;
 
@@ -1873,14 +1934,28 @@ async function analyzeFoodWithAI(
 
     try{
 
-        const formData =
-            new FormData();
+const compressedImage = await compressFoodImage(selectedFoodFile);
 
-        formData.append(
-            "image",
-            selectedFoodFile,
-            selectedFoodFile.name
-        );
+console.log(
+    "Original image:",
+    (selectedFoodFile.size / 1024 / 1024).toFixed(2),
+    "MB"
+);
+
+console.log(
+    "Compressed image:",
+    (compressedImage.size / 1024 / 1024).toFixed(2),
+    "MB"
+);
+
+const formData = new FormData();
+
+formData.append(
+    "image",
+    compressedImage,
+    compressedImage.name
+);
+    
         formData.append(
     "meal_type",
     type
