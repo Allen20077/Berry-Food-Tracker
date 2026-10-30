@@ -255,7 +255,7 @@ async def analyze_food(
         raise HTTPException(status_code=400, detail="The uploaded image is empty.")
     if len(raw) > MAX_IMAGE_BYTES:
         raise HTTPException(status_code=413, detail="Image is too large. Please use an image under 20 MB.")
-
+    stage = "Groq AI image analysis"
     try:
         completion = client.chat.completions.create(
             model=MODEL,
@@ -327,7 +327,7 @@ temperature=0.2,
         )
 
         storage = get_supabase()
-
+        stage = "Supabase connection"
         storage.storage.from_(SUPABASE_BUCKET).upload(
             image_path,
             raw,
@@ -345,7 +345,7 @@ temperature=0.2,
             "image_file": image_path,
             "analysis": result,
         }
-
+        stage = "Supabase analysis upload"
         storage.storage.from_(SUPABASE_BUCKET).upload(
             analysis_path,
             json.dumps(
@@ -372,7 +372,12 @@ temperature=0.2,
             },
         }
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Groq analysis failed: {exc}") from exc
+        print(f"BERRY ERROR [{stage}]: {type(exc).__name__}: {exc}", flush=True)
+
+        raise HTTPException(
+            status_code=502,
+            detail=f"{stage} failed: {type(exc).__name__}: {exc}"
+        ) from exc
 
 # =====================================================
 # SERVE FRONTEND

@@ -420,10 +420,14 @@ const questions = [
 
 let currentQuestion = 0;
 
-/* Real Berry AI backend. Keep the Groq key on the backend only. */
+/* Berry AI backend URL */
 const BERRY_API_URL =
-    window.BERRY_API_URL ||
-    "https://berry-food-tracker.vercel.app";
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+        ? "http://localhost:8000"
+        : "https://berry-food-tracker.vercel.app";
+        
+console.log("Berry API URL:", BERRY_API_URL);
 
 let selectedFoodFile = null;
 let latestAIResult = null;
