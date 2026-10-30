@@ -1808,9 +1808,27 @@ function openFoodAnalyzer(
                         </option>
 
                     </select>
+                    </label>
+                    
+                <!-- ADDITIONAL FOOD ITEMS -->
+                <label class="block mt-4">
+
+                    <span class="text-xs font-bold text-slate-600">
+                        Additional Food Items (Optional)
+                    </span>
+
+                    <textarea
+                        id="additionalFoodItems"
+                        rows="3"
+                        placeholder="Example: chicken, curd, onion, extra rice..."
+                        class="w-full mt-2 p-3 rounded-xl border border-slate-200 text-sm"
+                    ></textarea>
+
+                    <span class="text-xs text-slate-400 mt-1 block">
+                        Add ingredients that Berry AI might miss.
+                    </span>
 
                 </label>
-
 
                 <button
                     onclick="
@@ -1858,6 +1876,8 @@ async function analyzeFoodWithAI(
         document.getElementById(
             "photoMealType"
         ).value;
+    const additionalFoods =
+    document.getElementById("additionalFoodItems")?.value.trim() || "";
 
     if(!selectedFoodFile){
 
@@ -1948,6 +1968,7 @@ console.log(
     "MB"
 );
 
+
 const formData = new FormData();
 
 formData.append(
@@ -1955,11 +1976,17 @@ formData.append(
     compressedImage,
     compressedImage.name
 );
-    
-        formData.append(
+
+formData.append(
     "meal_type",
     type
 );
+
+formData.append(
+    "additional_foods",
+    additionalFoods
+);
+
 
         const response =
             await fetch(
@@ -2092,6 +2119,10 @@ function openManualFood(
 
     const foods =
         (a.foods || []);
+    const foodsText = foods.map(
+    food =>
+        `${food.name || "Food"} - ${food.estimated_grams || 0} g`
+).join("\n");
 
     const selectedType =
         mealType || "Lunch";
@@ -2180,20 +2211,27 @@ function openManualFood(
                     : ""
                 }
 
-                <div
-                    class="
-                        bg-white
-                        rounded-2xl
-                        p-4
-                        border
-                        border-slate-100
-                    "
-                >
+
+                <div class="bg-white rounded-2xl p-4 border border-slate-100">
+
                     <div class="text-xs font-extrabold text-slate-700 mb-2">
-                        🔍 Foods detected
+                        🍽️ Food Items — Add or Edit
                     </div>
-                    ${foodsHTML}
+
+                    <textarea
+                        id="foodItemsEditor"
+                        rows="5"
+                        class="w-full p-3 rounded-xl border border-slate-200 text-sm"
+                        placeholder="One food per line. Example: Rice - 200 g"
+                    >${escapeHTML(foodsText)}</textarea>
+
+                    <p class="text-xs text-slate-400 mt-2">
+                        Add missing foods, correct names or change quantities.
+                        Use one food per line.
+                    </p>
+
                 </div>
+
 
                 <input
                     id="foodName"
@@ -2567,8 +2605,22 @@ function saveFood(){
                 Number(document.getElementById("foodFolate")?.value) || 0
         },
 
-        foods:
-            latestAIResult?.foods || [],
+foods: (
+    document.getElementById("foodItemsEditor")?.value || ""
+)
+.split("\n")
+.map(line => line.trim())
+.filter(Boolean)
+.map(line => {
+    const match = line.match(
+        /^(.*?)\s*[-–]\s*(\d+(?:\.\d+)?)\s*g?$/i
+    );
+
+    return {
+        name: match ? match[1].trim() : line,
+        estimated_grams: match ? Number(match[2]) : 0
+    };
+}),
 
         aiConfidence:
             latestAIResult?.confidence || {},
