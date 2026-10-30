@@ -72,12 +72,100 @@
             border-color: #52796f;
             box-shadow: 0 0 0 3px rgba(82, 121, 111, .1);
         }
+        
+/* =========================================
+   MOBILE RESPONSIVE FIX
+========================================= */
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+}
+
+/* Main application container */
+#app {
+    width: 100%;
+    max-width: 390px;
+
+    height: 100vh;
+    height: 100dvh;
+
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Allow app screens to shrink correctly */
+#onboarding,
+#mainApp {
+    min-height: 0;
+}
+
+#mainApp {
+    height: 100%;
+}
+
+/* Keep header and bottom navigation visible */
+#mainApp > header,
+#mainApp > nav {
+    flex-shrink: 0;
+}
+
+/* Main dashboard scrolling */
+#mainApp > main {
+    flex: 1 1 0%;
+    min-height: 0;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+
+    padding-bottom: calc(
+        24px + env(safe-area-inset-bottom)
+    );
+}
+
+/* Respect phone bottom safe area */
+#mainApp > nav {
+    flex-shrink: 0;
+
+    padding-bottom: calc(
+        12px + env(safe-area-inset-bottom)
+    );
+}
+
+/* Onboarding scrolling */
+#questionContainer {
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Desktop layout */
+@media (min-width: 640px) {
+    #app {
+        height: min(844px, calc(100dvh - 32px));
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+}
+
     </style>
 </head>
 
 <body>
 
-    <div id="app" class="w-full max-w-[390px] h-screen sm:h-[844px]
+    <div id="app" class="w-full max-w-[390px] h-[100dvh] sm:h-[844px]
            mx-auto bg-[#f8faf8]
            sm:rounded-[44px]
            shadow-2xl overflow-hidden
@@ -687,7 +775,11 @@
         </div>
 
 
-        <script src="./app.js?v=2"></script>
+        <!-- Supabase library must load before app.js -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Berry application -->
+<script src="./app.js?v=3"></script>
 
 
 </body>

@@ -2,9 +2,270 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    DATABASE
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ===================================================== */
 
+/* =====================================================
+   SUPABASE AUTH
+===================================================== */
+
+const SUPABASE_URL =
+    "https://skmovfpyvfexluivhrmv.supabase.co";
+
+const SUPABASE_PUBLIC_KEY =
+    "sb_publishable_zRcFPgbspY3ALg6h85SRgg_nF0FwrHJ";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLIC_KEY
+    );
+
 const STORAGE_KEY =
     "berry_food_tracker_user";
+/* =====================================================
+   AUTHENTICATION
+===================================================== */
 
+async function loginWithProvider(provider) {
+    try {
+        const { error } =
+        await supabaseClient.auth.signInWithOAuth({
+            provider: provider,
+            options: {
+                redirectTo: window.location.origin,
+                queryParams: {
+                    prompt: "select_account"
+                }
+            }
+        });
+
+        if (error) {
+            showAuthMessage(error.message);
+        }
+    } catch (error) {
+        showAuthMessage(
+            error.message || "Login failed."
+        );
+    }
+}
+async function loginWithEmail() {
+
+    const email =
+        document.getElementById("loginEmail").value.trim();
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    if (!email || !password) {
+        showAuthMessage(
+            "Please enter your email and password."
+        );
+        return;
+    }
+
+    showAuthMessage("Logging in...");
+
+    try {
+
+        const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            showAuthMessage(error.message);
+            return;
+        }
+
+        if (data.user) {
+
+            showAuthMessage("");
+
+            await handleAuthenticatedUser(
+                data.user
+            );
+        }
+
+    } catch (error) {
+
+        console.error("Login error:", error);
+
+        showAuthMessage(
+            error.message ||
+            "Unable to login."
+        );
+    }
+}
+async function signupWithEmail() {
+
+    const email =
+        document.getElementById("loginEmail").value.trim();
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    if (!email || !password) {
+        showAuthMessage(
+            "Please enter your email and password."
+        );
+        return;
+    }
+
+    if (password.length < 6) {
+        showAuthMessage(
+            "Password must be at least 6 characters."
+        );
+        return;
+    }
+
+    showAuthMessage("Creating your account...");
+
+    try {
+
+        const { data, error } =
+        await supabaseClient.auth.signUp({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            showAuthMessage(error.message);
+            return;
+        }
+
+        // Account created and user is logged in
+        if (data.session && data.user) {
+
+            showAuthMessage("");
+
+            await handleAuthenticatedUser(
+                data.user
+            );
+
+            return;
+        }
+
+        // This happens when Supabase email confirmation is enabled
+        showAuthMessage(
+            "Account created. Please verify your email, then login."
+        );
+
+    } catch (error) {
+
+        console.error("Signup error:", error);
+
+        showAuthMessage(
+            error.message ||
+            "Unable to create account."
+        );
+    }
+}
+
+function showAuthMessage(message) {
+
+    const element =
+        document.getElementById(
+            "authMessage"
+        );
+
+    if (element) {
+        element.textContent =
+            message;
+    }
+
+}
+async function logout() {
+
+    try {
+
+        const {
+            error
+        } =
+        await supabaseClient.auth.signOut();
+
+
+        if (error) {
+
+            console.error(
+                "Logout error:",
+                error
+            );
+
+            showAuthMessage(
+                "Logout failed. Please try again."
+            );
+
+            return;
+        }
+
+
+        localStorage.removeItem(
+            STORAGE_KEY
+        );
+
+
+        window.location.reload();
+
+    } catch (error) {
+
+        console.error(
+            "Logout failed:",
+            error
+        );
+
+    }
+
+}
+async function handleAuthenticatedUser(user) {
+
+    if (!user) {
+        return;
+    }
+
+    console.log(
+        "Authenticated user:",
+        user.id
+    );
+
+    const loginScreen =
+        document.getElementById("loginScreen");
+
+    const onboarding =
+        document.getElementById("onboarding");
+
+    const mainApp =
+        document.getElementById("mainApp");
+
+    if (loginScreen) {
+        loginScreen.classList.add("hidden");
+    }
+
+    if (appData.onboardingComplete) {
+
+        if (onboarding) {
+            onboarding.classList.add("hidden");
+        }
+
+        if (mainApp) {
+            mainApp.classList.remove("hidden");
+        }
+
+        showMainApp();
+
+    } else {
+
+        if (mainApp) {
+            mainApp.classList.add("hidden");
+        }
+
+        if (onboarding) {
+            onboarding.classList.remove("hidden");
+        }
+
+        currentQuestion = 0;
+
+        renderQuestion();
+    }
+}
 
 let appData =
     JSON.parse(
@@ -145,6 +406,13 @@ const questions = [
             "Low carb",
             "Keto"
         ]
+    },
+    {
+        title: "Do you have any food allergies?",
+        subtitle: "Tell Berry about anything you need to avoid.",
+        key: "allergies",
+        type: "text",
+        placeholder: "e.g. peanuts, dairy, none"
     }
 
 ];
@@ -2899,7 +3167,7 @@ function openAICoach(){
   PROFILE
 ===================================================== */
 
-function openProfile(){
+function openProfile() {
 
     const p =
         appData.profile;
@@ -2926,8 +3194,8 @@ function openProfile(){
                         "
                     >
                         ${escapeHTML(
-                            p.name
-                        )}
+            p.name
+        )}
                     </b>
 
                     <p
@@ -2977,12 +3245,26 @@ function openProfile(){
                 </button>
 
             </div>
+    <button
+                onclick="logout()"
+                class="
+                    w-full
+                    p-4
+                    rounded-2xl
+                    bg-red-50
+                    text-red-600
+                    text-left
+                    font-bold
+                    text-sm
+                "
+            >
+                🚪 Log out
+            </button>
 
         `
+        
     );
-
 }
-
 
 /* =====================================================
   GOALS
@@ -3637,54 +3919,44 @@ function updateCoach(
   START APPLICATION
 ===================================================== */
 
-if(
-    appData.onboardingComplete
-){
+/* =====================================================
+   START APPLICATION
+===================================================== */
 
-    showMainApp();
+function startApplication() {
 
-}else{
+    const onboarding =
+        document.getElementById("onboarding");
 
-    renderQuestion();
+    const mainApp =
+        document.getElementById("mainApp");
 
-}
-
-lucide.createIcons();
-lucide.createIcons();document.addEventListener("keydown", function(event) {
-
-    if (event.key === "Enter") {
-
-        const activeElement = document.activeElement;
-
-        // Don't trigger while typing in a textarea
-        if (
-            activeElement &&
-            activeElement.tagName === "TEXTAREA"
-        ) {
-            return;
-        }
-
-        // Don't trigger while typing in a select
-        if (
-            activeElement &&
-            activeElement.tagName === "SELECT"
-        ) {
-            return;
-        }
-
-        event.preventDefault();
-
-        const nextButton =
-            document.getElementById("nextButton");
-
-        if (
-            nextButton &&
-            !nextButton.disabled &&
-            !nextButton.classList.contains("hidden")
-        ) {
-            nextButton.click();
-        }
-
+    if (!onboarding || !mainApp) {
+        console.error("Onboarding or Main App not found.");
+        return;
     }
 
-});
+    mainApp.classList.add("hidden");
+
+    if (appData.onboardingComplete) {
+
+        onboarding.classList.add("hidden");
+
+        showMainApp();
+
+    } else {
+
+        onboarding.classList.remove("hidden");
+
+        currentQuestion = 0;
+
+        renderQuestion();
+    }
+
+    lucide.createIcons();
+}
+
+startApplication();
+
+startApplication();
+lucide.createIcons();
